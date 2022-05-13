@@ -18,6 +18,7 @@ jobs:
         id: version_step
         run: |
           echo "##[set-output name=version;]VERSION=${GITHUB_REF#$"refs/tags/v"}"
+          echo "##[set-output name=git_tag;]${GITHUB_REF#$"refs/tags/v"}"
           echo "##[set-output name=version_tag;]$GITHUB_REPOSITORY:${GITHUB_REF#$"refs/tags/v"}"
           echo "##[set-output name=latest_tag;]$GITHUB_REPOSITORY:latest"
       - name: Print Version
@@ -51,7 +52,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: shantanustreak/sample-go-log:${{GITHUB_REF#$"refs/tags/v"}}
+          tags: shantanustreak/sample-go-log:${{steps.version_step.outputs.git_tag}}
           build-args: |
             ${{steps.version_step.outputs.version}}
       # - name: Update image tag in helm chart

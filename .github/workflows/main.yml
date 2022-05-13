@@ -46,8 +46,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}
-            ${{env.VERSION_TAG}}
+          # tags: |
+          #   ${{ secrets.DOCKER_USERNAME }}
+          #   ${{env.VERSION_TAG}}
+          tags: shantanustreak/sample-go-log:latest
           build-args: |
             ${{steps.version_step.outputs.version}}

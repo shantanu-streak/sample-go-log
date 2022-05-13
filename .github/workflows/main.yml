@@ -1,5 +1,8 @@
 name: sample-go-log
-on: push
+on:
+  push:
+    branches:
+      - main
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -21,6 +24,7 @@ jobs:
           echo "##[set-output name=git_tag;]${GITHUB_REF#$"refs/tags/v"}"
           echo "##[set-output name=version_tag;]$GITHUB_REPOSITORY:${GITHUB_REF#$"refs/tags/v"}"
           echo "##[set-output name=latest_tag;]$GITHUB_REPOSITORY:latest"
+          echo "##[set-output name=image_name;]shantanustreak/sample-go-log:${GITHUB_REF#$"refs/tags/v"}"
       - name: Print Version
         run: |
           echo ${{steps.version_step.outputs.version_tag}}
@@ -52,18 +56,19 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: shantanustreak/sample-go-log:${{steps.version_step.outputs.git_tag}}
+          tags: ${{steps.version_step.outputs.image_name}}
           build-args: |
             ${{steps.version_step.outputs.version}}
-      # - name: Update image tag in helm chart
-      #   id: update_helm_chart
-      #   run: |
-      #     git clone -b main "https://shantanu-streak:${{ secrets.GH_ACCESS_TOKEN }}@github.com/shantanu-streak/helm-charts.git"
-      #     cd helm-charts
-
-      #     cd ../
-      #     git config user.email ${{ secrets.GH_EMAIL }}
-      #     git config user.name "LukeMwila"
-      #     git add *
-      #     git commit -m "Update image tag"
-      #     git push -u origin main
+      - name: Update image tag in helm chart
+        id: update_helm_chart
+        run: |
+          git clone -b main "https://shantanu-streak:${{ secrets.GH_ACCESS_TOKEN }}@github.com/shantanu-streak/helm-charts.git"
+          cd helm-charts/sample-go-log
+          yq e -i '.spec.jobTemplate.spec.template.spec.containers[0].image = "${{steps.version_step.outputs.image_name}}"' ./cron.yaml
+          cd ../../
+          git config user.email ${{ secrets.GH_EMAIL }}
+          git config user.name  ${{ secrets.GH_NAME }}
+          git config user.password  ${{ secrets.GH_ACCESS_TOKEN }}
+          git add *
+          git commit -m "Updated image tag to ${{steps.version_step.outputs.git_tag}}"
+          git push -u origin main
